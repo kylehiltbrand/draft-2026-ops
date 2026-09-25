@@ -2,13 +2,14 @@
 # Source: MLB Stats API (statsapi.mlb.com)
 # Caveat: small samples. Median draftee has ~75 PA. This is noise, not talent.
 
-pkgs <- c("jsonlite", "dplyr", "purrr")
+pkgs <- c("jsonlite", "dplyr", "purrr", "ggplot2")
 missing <- pkgs[!pkgs %in% rownames(installed.packages())]
 if (length(missing) > 0) install.packages(missing)
 
 library(jsonlite)
 library(dplyr)
 library(purrr)
+library(ggplot2)
 
 # 1. Every 2026 draft pick
 draft <- fromJSON("https://statsapi.mlb.com/api/v1/draft/2026", flatten = TRUE)
@@ -42,3 +43,18 @@ leaders <- pro |>
 
 View(leaders)
 
+# 4. Does draft slot predict debut OPS?
+# My prediction: [write it here before running]
+
+ggplot(leaders, aes(x = pick, y = OPS)) +
+  geom_point(aes(size = PA), alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "2026 draftees: draft slot vs. pro debut OPS",
+       subtitle = "Min. 75 PA. Point size = plate appearances.",
+       x = "Overall pick", y = "OPS")
+ggsave("slot_vs_ops.png", width = 8, height = 5)
+
+cor.test(leaders$pick, leaders$OPS)
+
+model <- lm(OPS ~ pick, data = leaders)
+summary(model)
